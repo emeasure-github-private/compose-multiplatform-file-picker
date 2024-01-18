@@ -12,7 +12,7 @@ import org.w3c.dom.ItemArrayLike
 import org.w3c.dom.asList
 import org.w3c.files.File
 import org.w3c.files.FileReader
-import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 public data class WebFile(
@@ -23,19 +23,17 @@ public data class WebFile(
 	public override suspend fun getFileByteArray(): ByteArray = readFileAsByteArray(platformFile)
 }
 
-@Composable
-public actual fun FilePicker(
+public actual fun filePicker(
 	show: Boolean,
 	initialDirectory: String?,
 	fileExtensions: List<String>,
 	title: String?,
 	onFileSelected: FileSelected,
 ) {
-	LaunchedEffect(show) {
-		if (show) {
-			val fixedExtensions = fileExtensions.map { ".$it" }
-			val file: List<File> = document.selectFilesFromDisk(fixedExtensions.joinToString(","), false)
-			onFileSelected(WebFile(file.first().name, file.first()))
+	val fixedExtensions = fileExtensions.map { ".$it" }
+	document.selectFilesFromDisk(fixedExtensions.joinToString(","), false) { files ->
+		if (files != null) {
+			onFileSelected(WebFile(files.first().name, files.first()))
 		}
 	}
 }
@@ -51,11 +49,11 @@ public actual fun MultipleFilePicker(
 	LaunchedEffect(show) {
 		if (show) {
 			val fixedExtensions = fileExtensions.map { ".$it" }
-			val file: List<File> = document.selectFilesFromDisk(fixedExtensions.joinToString(","), true)
-			val webFiles = file.map {
-				WebFile(it.name, it)
+			document.selectFilesFromDisk(fixedExtensions.joinToString(","), true) { files ->
+				if (files != null) {
+					onFileSelected(files.map { WebFile(it.name, it) })
+				}
 			}
-			onFileSelected(webFiles)
 		}
 	}
 }
@@ -71,10 +69,11 @@ public actual fun DirectoryPicker(
 	throw NotImplementedError("DirectoryPicker is not supported on the web")
 }
 
-private suspend fun Document.selectFilesFromDisk(
+private fun Document.selectFilesFromDisk(
 	accept: String,
-	isMultiple: Boolean
-): List<File> = suspendCoroutine {
+	isMultiple: Boolean,
+	callback: (List<File>?) -> Unit,
+) {
 	val tempInput = (createElement("input") as HTMLInputElement).apply {
 		type = "file"
 		style.display = "none"
@@ -82,14 +81,15 @@ private suspend fun Document.selectFilesFromDisk(
 		multiple = isMultiple
 	}
 
-	tempInput.onchange = { changeEvt ->
-		val files = (changeEvt.target.asDynamic().files as ItemArrayLike<File>).asList()
-		it.resume(files)
+	tempInput.onchange = { e ->
+		callback(
+			(e.target.asDynamic().files as? ItemArrayLike<File>)?.asList() ?: emptyList()
+		)
 	}
 
 	body!!.append(tempInput)
 	tempInput.click()
-	tempInput.remove()
+	//tempInput.remove() // NOTE: removing the input element breaks Mobile Chrome/Safari upload
 }
 
 public suspend fun readFileAsText(file: File): String = suspendCoroutine {
@@ -112,5 +112,7 @@ public suspend fun readFileAsByteArray(file: File): ByteArray = suspendCoroutine
 			}
 		it.resumeWith(Result.success(fileByteArray))
 	}
+	reader.onerror = { err -> it.resumeWithException(Exception("read $file failed")) }
+	reader.onabort = { err -> it.resumeWithException(Exception("read $file aborted")) }
 	reader.readAsArrayBuffer(file)
 }

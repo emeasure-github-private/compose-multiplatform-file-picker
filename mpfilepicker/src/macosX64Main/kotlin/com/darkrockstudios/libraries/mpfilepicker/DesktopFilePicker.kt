@@ -25,13 +25,14 @@ public data class MacOSFile(
 }
 
 @Composable
-public actual fun FilePicker(
+public actual fun filePicker(
 	show: Boolean,
 	initialDirectory: String?,
 	fileExtensions: List<String>,
 	title: String?,
 	onFileSelected: FileSelected,
 ) {
+	TODO("""
 	LaunchedEffect(show) {
 		if (show) {
 			with(NSOpenPanel()) {
@@ -53,6 +54,7 @@ public actual fun FilePicker(
 			}
 		}
 	}
+	"""
 }
 
 @Composable

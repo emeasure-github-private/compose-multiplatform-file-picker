@@ -13,8 +13,7 @@ public typealias FileSelected = (MPFile<Any>?) -> Unit
 
 public typealias FilesSelected = (List<MPFile<Any>>?) -> Unit
 
-@Composable
-public expect fun FilePicker(
+public expect fun filePicker(
 	show: Boolean,
 	initialDirectory: String? = null,
 	fileExtensions: List<String> = emptyList(),

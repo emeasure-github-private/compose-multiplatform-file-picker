@@ -11,35 +11,29 @@ public data class JvmFile(
 	override suspend fun getFileByteArray(): ByteArray = platformFile.readBytes()
 }
 
-@Composable
-public actual fun FilePicker(
+public actual fun filePicker(
 	show: Boolean,
 	initialDirectory: String?,
 	fileExtensions: List<String>,
 	title: String?,
 	onFileSelected: FileSelected,
 ) {
-	LaunchedEffect(show) {
-		if (show) {
-			val fileFilter = if (fileExtensions.isNotEmpty()) {
-				fileExtensions.joinToString(",")
-			} else {
-				""
-			}
+	val fileFilter = if (fileExtensions.isNotEmpty()) {
+		fileExtensions.joinToString(",")
+	} else {
+		""
+	}
 
-			val initialDir = initialDirectory ?: System.getProperty("user.dir")
-			val filePath = chooseFile(
-				initialDirectory = initialDir,
-				fileExtension = fileFilter,
-				title = title
-			)
-			if (filePath != null) {
-				onFileSelected(JvmFile(filePath, File(filePath)))
-			} else {
-				onFileSelected(null)
-			}
-
-		}
+	val initialDir = initialDirectory ?: System.getProperty("user.dir")
+	val filePath = chooseFile(
+		initialDirectory = initialDir,
+		fileExtension = fileFilter,
+		title = title
+	)
+	if (filePath != null) {
+		onFileSelected(JvmFile(filePath, File(filePath)))
+	} else {
+		onFileSelected(null)
 	}
 }
 

@@ -23,14 +23,14 @@ public data class IosFile(
 	override suspend fun getFileByteArray(): ByteArray = platformFile.dataRepresentation.toByteArray()
 }
 
-@Composable
-public actual fun FilePicker(
+public actual fun filePicker(
 	show: Boolean,
 	initialDirectory: String?,
 	fileExtensions: List<String>,
 	title: String?,
 	onFileSelected: FileSelected,
 ) {
+	TODO("""
 	val launcher = remember {
 		FilePickerLauncher(
 			initialDirectory = initialDirectory,
@@ -46,6 +46,7 @@ public actual fun FilePicker(
 			launcher.launchFilePicker()
 		}
 	}
+	""")
 }
 
 @Composable

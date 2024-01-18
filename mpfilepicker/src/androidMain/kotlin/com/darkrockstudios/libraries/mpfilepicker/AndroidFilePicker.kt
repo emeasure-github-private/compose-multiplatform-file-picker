@@ -15,14 +15,14 @@ public data class AndroidFile(
 	override suspend fun getFileByteArray(): ByteArray = platformFile.toFile().readBytes()
 }
 
-@Composable
-public actual fun FilePicker(
+public actual fun filePicker(
 	show: Boolean,
 	initialDirectory: String?,
 	fileExtensions: List<String>,
 	title: String?,
 	onFileSelected: FileSelected
 ) {
+	TODO("""
 	val launcher = rememberLauncherForActivityResult(contract = ActivityResultContracts.OpenDocument()) { result ->
 		if (result != null) {
 			onFileSelected(AndroidFile(result.toString(), result))
@@ -45,6 +45,7 @@ public actual fun FilePicker(
 			launcher.launch(mimeTypes)
 		}
 	}
+	""")
 }
 @Composable
 public actual fun MultipleFilePicker(
